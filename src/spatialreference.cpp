@@ -513,23 +513,27 @@ const GTIF* SpatialReference::GetGTIF()
 #pragma pack(pop)
 
             ShortKeyHeader *header = (ShortKeyHeader *)data.data();
-            // Calculate the number of shorts in the VLR data.
-            // The '+ 1' accounts for the header itself.
-            int count = (header->numKeys + 1) * 4;
-            short *data_s = reinterpret_cast<short *>( &(data[0]));
-
-            ST_SetKey(m_tiff, record.GetRecordId(), count, STT_SHORT, data_s);
+            if (header)
+            {
+                // Calculate the number of shorts in the VLR data.
+                // The '+ 1' accounts for the header itself.
+                int count = (header->numKeys + 1) * 4;
+                short *data_s = reinterpret_cast<short *>( &(data[0]));
+                if(std::size_t(count) <= data.size() / sizeof(short)) {
+                    ST_SetKey(m_tiff, record.GetRecordId(), count, STT_SHORT, data_s);
+                }
+            }
         }
 
         if (uid == record.GetUserId(true).c_str() &&
-            34736 == record.GetRecordId())
+            34736 == record.GetRecordId() && !data.empty())
         {
             int count = data.size() / sizeof(double);
             ST_SetKey(m_tiff, record.GetRecordId(), count, STT_DOUBLE, &(data[0]));
         }
 
         if (uid == record.GetUserId(true).c_str() &&
-            34737 == record.GetRecordId())
+            34737 == record.GetRecordId() && !data.empty())
         {
             int count = data.size()/sizeof(uint8_t);
             ST_SetKey(m_tiff, record.GetRecordId(), count, STT_ASCII, &(data[0]));
